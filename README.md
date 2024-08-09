@@ -1,2 +1,2 @@
 # LipReadingProject
-Deel Learnin + Computer Vision + Natural Language Processing
+Deel Learning + Computer Vision + Natural Language Processing
