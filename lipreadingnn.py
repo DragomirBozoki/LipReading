@@ -1,20 +1,8 @@
-import os
-import gdown
-import cv2
-import dlib
-import tensorflow as tf
 from tensorflow.keras.backend import ctc_batch_cost
-import numpy as np
-from typing import List
-from matplotlib import pyplot as plt
-from collections import defaultdict
-from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
-
-from preprocessing import vocabulary
-from model import LipReadingModel
 from preprocessing import *
+from model import LipReadingModel
 from datapipeline import *
 
 char_to_num, num_to_char = vocabulary()
@@ -40,19 +28,25 @@ def scheduler(epoch, lr):
     else:
         return float(lr*tf.math.exp(-0.1))
 
+
 class ProduceExample(tf.keras.callbacks.Callback):
 
     def __init__(self, dataset) -> None:
         self.dataset = dataset.as_numpy_iterator()
 
     def on_epoch_end(self, epoch, logs=None) -> None:
+
         data = self.dataset.next()
         yhat = self.model.predict(data[0])
-        decoded = tf.keras.backend.ctc_decode(yhat, [75,75], greedy=False)[0][0].numpy()
+        batch_size = yhat.shape[0]
+
+        sequence_lengths = [75] * batch_size
+        decoded = tf.keras.backend.ctc_decode(yhat, sequence_lengths, greedy=False)[0][0].numpy()
+
         for x in range(len(yhat)):
             print('Original is: ', tf.strings.reduce_join(num_to_char(data[1][x])).numpy().decode('utf-8'))
             print('Prediction is: ', tf.strings.reduce_join(num_to_char(decoded[x])).numpy().decode('utf-8'))
-            print('~'*100)
+            print('~' * 100)
 
 
 def CTCLoss(y_true, y_pred):
@@ -75,7 +69,7 @@ def learning():
 
     speaker_control_callback = SpeakerControl(numspeaker=1)
 
-    checkpoint_callback = ModelCheckpoint(os.path.join('models', 'checkpoint_full.weights.h5'), monitor = 'loss', save_weights_only = True)
+    checkpoint_callback = ModelCheckpoint(os.path.join('Weights', 'checkpoint_full.weights.h5'), monitor = 'loss', save_weights_only = True)
 
     schedule_callback = LearningRateScheduler(scheduler)
 
@@ -87,7 +81,3 @@ def learning():
     history = model.fit(train_data, epochs = 50*9, callbacks = [speaker_control_callback, checkpoint_callback, schedule_callback, example_callback])
 
     return history
-
-def __main__():
-    learning()
-__main__()

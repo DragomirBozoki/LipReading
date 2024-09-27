@@ -1,4 +1,3 @@
-import tensorflow as tf
 from preprocessing import *
 
 def data(numspeaker = 1):

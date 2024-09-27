@@ -2,8 +2,6 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv3D, Dense, GRU, Dropout, Bidirectional, MaxPool3D
 from tensorflow.keras.layers import Flatten, Activation, TimeDistributed
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import ModelCheckpoint, LearningRateScheduler
 from tensorflow.keras.initializers import Orthogonal
 
 
