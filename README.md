@@ -15,4 +15,4 @@ Before the processed data is passed to the model, it must be organized into the 
 
 The CTC loss function is used for training the neural network. To optimally monitor the training process, various callback functions have been implemented. Among them is a scheduler that maintains a constant learning rate during the first 30 epochs, after which it decays exponentially, allowing the network to converge more effectively.
 
-The Adam optimizer, known for its efficiency and robustness in gradient-based learning, is used for model optimization, with the initial learning rate set to 0.0001. The training process spans 60 epochs, during which the network gradually adjusts to achieve the best possible performance on the task while avoiding overfitting.
+The Adam optimizer, known for its efficiency and robustness in gradient-based learning, is used for model optimization, with the initial learning rate set to 0.0001. The training process spans 450 epochs, changing speakers each 50 epoches, during which the network gradually adjusts to achieve the best possible performance on the task while avoiding overfitting.
