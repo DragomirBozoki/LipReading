@@ -1,3 +1,6 @@
+Download first 22 speakers and alignments: 
+https://drive.google.com/file/d/1fDsKDHVsStDtCrt2fU08uSac-Y1d_ImT/view?usp=drive_link
+
 The GRID corpus [https://spandh.dcs.shef.ac.uk/gridcorpus/] is a comprehensive audiovisual database containing sentences spoken by 34 speakers (18 males and 16 females) in English. Each speaker utters 1,000 sentences, resulting in a total of 34,000 audio and video recordings. The sentences in the GRID corpus follow a specific structure, where each sentence adheres to the following pattern: command (4 options) + color (4 options) + preposition (4 options) + letter (25 options) + digit (10 options) + adverb (4 options). This approach allows for the generation of up to 64,000 unique sentences, such as: "set blue by four please" or "place red at C zero again."
 
 ![slika1](https://github.com/user-attachments/assets/aeb40ed1-8538-49f9-9212-50851dc2a226)
