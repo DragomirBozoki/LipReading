@@ -1,11 +1,10 @@
 import os
-import gdown
 import cv2
 import dlib
 import numpy as np
 from typing import List
 import tensorflow as tf
-from collections import defaultdict
+
 
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
@@ -29,21 +28,24 @@ def load_video(path: str, width: int = 64, height: int = 64, detector=detector, 
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         faces = detector(gray_frame)
-        for face in faces:
-            landmarks = predictor(gray_frame, face)
+        if len(faces) == 0:
+            print('Can not find face! Jumping to next  frame')
+        else:
+            for face in faces:
+                landmarks = predictor(gray_frame, face)
 
-            lip_left = landmarks.part(48).x
-            lip_right = landmarks.part(54).x
-            lip_top = min(landmarks.part(50).y, landmarks.part(51).y)
-            lip_bottom = max(landmarks.part(58).y, landmarks.part(59).y)
+                lip_left = landmarks.part(48).x
+                lip_right = landmarks.part(54).x
+                lip_top = min(landmarks.part(50).y, landmarks.part(51).y)
+                lip_bottom = max(landmarks.part(58).y, landmarks.part(59).y)
 
-            lip_frame = frame[lip_top:lip_bottom, lip_left:lip_right]
+                lip_frame = frame[lip_top:lip_bottom, lip_left:lip_right]
 
-            lip_frame_resized = cv2.resize(lip_frame, (width, height))
+                lip_frame_resized = cv2.resize(lip_frame, (width, height))
 
-            lip_frame_gray = cv2.cvtColor(lip_frame_resized, cv2.COLOR_BGR2GRAY)
+                lip_frame_gray = cv2.cvtColor(lip_frame_resized, cv2.COLOR_BGR2GRAY)
 
-            frames.append(lip_frame_gray)
+                frames.append(lip_frame_gray)
 
     cap.release()
 

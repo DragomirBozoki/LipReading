@@ -7,28 +7,64 @@ from datapipeline import *
 
 char_to_num, num_to_char = vocabulary()
 
+config = tf.compat.v1.ConfigProto()
+config.intra_op_parallelism_threads = 4
+config.inter_op_parallelism_threads = 2
+
+session = tf.compat.v1.Session(config=config)
+tf.compat.v1.keras.backend.set_session(session)
+
+#promeni govornika na svakih 30 epoha, zaustavi ucenje ako je broj govornika veći od 25
 class SpeakerControl(tf.keras.callbacks.Callback):
     def __init__(self, numspeaker):
         super().__init__()
         self.numspeaker = numspeaker
 
     def on_epoch_end(self, epoch, logs=None):
-        if (epoch + 1) % 50 == 0:
+        if (epoch + 1) % 30 == 0:
             self.numspeaker += 1
             print(f'Epoch {epoch+1}: Switching to speaker {self.numspeaker}')
-        if self.numspeaker > 10:
+        if self.numspeaker > 22:
             print('Training done')
             self.model.stop_training = True
 
-# Use the custom callback in model.f
-
+#podesiva brzina ucenja
 def scheduler(epoch, lr):
-    if epoch < 30:
+    if epoch < 50:
         return lr
     else:
-        return float(lr*tf.math.exp(-0.1))
+        cycle = (epoch - 50) // 50
+        if cycle % 2 == 0:
+            return float(lr * tf.math.exp(-0.1))
+        else:
+            return lr
 
+#sacuvaj history u backup na svakih 5 epoha
+class SaveHistoryCallback(tf.keras.callbacks.Callback):
+    def __init__(self, save_path, interval=10):
+        super(SaveHistoryCallback, self).__init__()
+        self.save_path = save_path
+        self.interval = interval
+        self.history = {}
 
+    def on_epoch_end(self, epoch, logs=None):
+        if logs is not None:
+            for key, value in logs.items():
+                if key not in self.history:
+                    self.history[key] = []
+                self.history[key].append(value)
+        if (epoch + 1) % 5 == 0:
+            self.save_history()
+
+    def save_history(self):
+        # Save the history as a file
+        save_file = os.path.join(self.save_path, f'history_epoch_{len(self.history["loss"])}.txt')
+        with open(save_file, 'w') as f:
+            for key, values in self.history.items():
+                f.write(f'{key}: {values}\n')
+        print(f'Saved history at epoch {len(self.history["loss"])}')
+
+#predikcija mreze nakon svake epohe
 class ProduceExample(tf.keras.callbacks.Callback):
 
     def __init__(self, dataset) -> None:
@@ -48,7 +84,7 @@ class ProduceExample(tf.keras.callbacks.Callback):
             print('Prediction is: ', tf.strings.reduce_join(num_to_char(decoded[x])).numpy().decode('utf-8'))
             print('~' * 100)
 
-
+#CTCloss funkcija gubitka za merenje kvaliteta mreže
 def CTCLoss(y_true, y_pred):
 
     batch_len = tf.cast(tf.shape(y_true)[0], dtype = "int64")
@@ -61,6 +97,7 @@ def CTCLoss(y_true, y_pred):
     loss = tf.keras.backend.ctc_batch_cost(y_true, y_pred, input_length, label_length)
     return loss
 
+#podesi učenje
 def learning():
 
     model = LipReadingModel()
@@ -77,7 +114,9 @@ def learning():
 
     example_callback = ProduceExample(train_data)
 
+    save_history_callback = SaveHistoryCallback(save_path='history_logs', interval=10)
+
     model.build((None, 75, 64, 64, 1))
-    history = model.fit(train_data, epochs = 50*9, callbacks = [speaker_control_callback, checkpoint_callback, schedule_callback, example_callback])
+    history = model.fit(train_data, epochs = 50*9, callbacks = [speaker_control_callback, checkpoint_callback, schedule_callback, example_callback, save_history_callback])
 
     return history

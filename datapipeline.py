@@ -2,7 +2,7 @@ from preprocessing import *
 
 def data(numspeaker):
 
-    data = tf.data.Dataset.list_files(f'./data/s{numspeaker}/*.mpg')
+    data = tf.data.Dataset.list_files(f'data/s{numspeaker}/*.mpg')
     data = data.shuffle(1000, reshuffle_each_iteration=False)
     data = data.map(lambda file: mappable_function(numspeaker, file))
 
@@ -11,7 +11,9 @@ def data(numspeaker):
 
     return data
 
+#poravnanje alignmentsa i video snimaka
 def mappable_function(file, numspeaker):
+
     result = tf.py_function(load_data, [file, numspeaker], (tf.float32, tf.int64))
 
     return result
