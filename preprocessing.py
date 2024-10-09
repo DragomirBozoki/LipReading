@@ -5,9 +5,9 @@ import numpy as np
 from typing import List
 import tensorflow as tf
 
-
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+
 def vocabulary():
 
     vocab = [x for x in "abcdefghijklmnopqrstuvwxyz'?!123456789 "]
