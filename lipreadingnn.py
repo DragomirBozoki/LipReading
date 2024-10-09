@@ -5,6 +5,7 @@ from preprocessing import *
 from model import LipReadingModel
 from datapipeline import *
 
+strategy = tf.distribute.MirroredStrategy()
 char_to_num, num_to_char = vocabulary()
 
 config = tf.compat.v1.ConfigProto()
@@ -14,19 +15,6 @@ config.inter_op_parallelism_threads = 2
 session = tf.compat.v1.Session(config=config)
 tf.compat.v1.keras.backend.set_session(session)
 
-#promeni govornika na svakih 30 epoha, zaustavi ucenje ako je broj govornika veći od 25
-class SpeakerControl(tf.keras.callbacks.Callback):
-    def __init__(self, numspeaker):
-        super().__init__()
-        self.numspeaker = numspeaker
-
-    def on_epoch_end(self, epoch, logs=None):
-        if (epoch + 1) % 30 == 0:
-            self.numspeaker += 1
-            print(f'Epoch {epoch+1}: Switching to speaker {self.numspeaker}')
-        if self.numspeaker > 22:
-            print('Training done')
-            self.model.stop_training = True
 
 #podesiva brzina ucenja
 def scheduler(epoch, lr):
@@ -100,23 +88,21 @@ def CTCLoss(y_true, y_pred):
 #podesi učenje
 def learning():
 
-    model = LipReadingModel()
-
-    model.compile(optimizer = Adam(learning_rate = 0.0001), loss = CTCLoss)
-
-    speaker_control_callback = SpeakerControl(numspeaker=1)
+    with strategy.scope():
+        model = LipReadingModel()
+        model.compile(optimizer = Adam(learning_rate = 0.0001), loss = CTCLoss)
+        model.build((None, 75, 64, 64, 1))
 
     checkpoint_callback = ModelCheckpoint(os.path.join('Weights', 'checkpoint_full.weights.h5'), monitor = 'loss', save_weights_only = True)
 
     schedule_callback = LearningRateScheduler(scheduler)
 
-    train_data = data(speaker_control_callback.numspeaker)
+    train_data, test_data = datapipeline()
 
     example_callback = ProduceExample(train_data)
 
     save_history_callback = SaveHistoryCallback(save_path='history_logs', interval=10)
 
-    model.build((None, 75, 64, 64, 1))
-    history = model.fit(train_data, epochs = 30*22, callbacks = [speaker_control_callback, checkpoint_callback, schedule_callback, example_callback, save_history_callback])
+    history = model.fit(train_data, epochs = 30*22, callbacks = [checkpoint_callback, schedule_callback, example_callback, save_history_callback])
 
     return history
