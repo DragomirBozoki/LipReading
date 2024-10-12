@@ -103,6 +103,6 @@ def learning():
 
     save_history_callback = SaveHistoryCallback(save_path='history_logs', interval=10)
 
-    history = model.fit(train_data, epochs = 30*22, callbacks = [checkpoint_callback, schedule_callback, example_callback, save_history_callback])
+    history = model.fit(train_data, epochs = 500, callbacks = [checkpoint_callback, schedule_callback, example_callback, save_history_callback])
 
     return history

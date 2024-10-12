@@ -1,4 +1,5 @@
 import os
+import numpy
 import cv2
 import dlib
 import numpy as np
@@ -75,16 +76,18 @@ def load_alignments(path:str) -> List[str]:
 # funkcija load_data ucitava aligments(labele), video i izdvaja automatski usne na video snimku
 
 def load_data(speaker_num, path: str):
+
     path = path.numpy()
+    speaker_num = speaker_num.numpy().decode('utf-8')
+
     if isinstance(path, bytes):
         path = path.decode('utf-8')
     else:
         path = str(path)
 
-    #print(path)
     file_name = os.path.basename(path).split('.')[0]
-    video_path = os.path.join('data', f's{speaker_num}', f'{file_name}.mpg')
-    alignment_path = os.path.join('data', 'alignments', f's{speaker_num}', f'{file_name}.align')
+    video_path = os.path.join('data', f'{speaker_num}', f'{file_name}.mpg')
+    alignment_path = os.path.join('data', 'alignments', f'{speaker_num}', f'{file_name}.align')
 
     frames = load_video(video_path)
     alignments = load_alignments(alignment_path)

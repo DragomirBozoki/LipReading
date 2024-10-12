@@ -1,5 +1,4 @@
 from lipreadingnn import *
-from data_download_googledrive import check_download
 import json
 
 def __main__():
